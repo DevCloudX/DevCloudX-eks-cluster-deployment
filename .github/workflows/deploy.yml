@@ -1,0 +1,57 @@
+name: Terraform EKS Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      vpc_cidr_block:
+        description: "VPC CIDR Block"
+        required: false
+        default: "10.0.0.0/16"
+      subnet_azs:
+        description: "Comma-separated AZs"
+        required: false
+        default: "us-west-1a,us-west-1b"
+      vpc_name:
+        description: "VPC Name"
+        required: false
+        default: "DevCloudX"
+      route_table_name:
+        description: "Route Table Name"
+        required: false
+        default: "DevCloudX"
+      eks_cluster_name:
+        description: "EKS Cluster Name"
+        required: false
+        default: "DevCloudX"
+      ssh_key_name:
+        description: "SSH Key Name"
+        required: false
+        default: "project4"
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        env:
+          TF_VAR_vpc_cidr_block: ${{ github.event.inputs.vpc_cidr_block }}
+          TF_VAR_subnet_azs: ${{ github.event.inputs.subnet_azs }}
+          TF_VAR_vpc_name: ${{ github.event.inputs.vpc_name }}
+          TF_VAR_route_table_name: ${{ github.event.inputs.route_table_name }}
+          TF_VAR_eks_cluster_name: ${{ github.event.inputs.eks_cluster_name }}
+          TF_VAR_ssh_key_name: ${{ github.event.inputs.ssh_key_name }}
+        run: |
+          echo "${{ github.event.inputs.subnet_azs }}" | tr ',' '\n'
+          terraform apply -auto-approve
