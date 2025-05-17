@@ -3,6 +3,12 @@ name: Terraform EKS Deployment
 on:
   workflow_dispatch:
     inputs:
+      aws_access_key_id:
+        description: "AWS Access Key ID"
+        required: true
+      aws_secret_access_key:
+        description: "AWS Secret Access Key"
+        required: true
       vpc_cidr_block:
         description: "VPC CIDR Block"
         required: false
@@ -32,6 +38,16 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
+    env:
+      # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      TF_VAR_vpc_cidr_block: ${{ github.event.inputs.vpc_cidr_block }}
+      TF_VAR_subnet_azs: ${{ github.event.inputs.subnet_azs }}
+      TF_VAR_vpc_name: ${{ github.event.inputs.vpc_name }}
+      TF_VAR_route_table_name: ${{ github.event.inputs.route_table_name }}
+      TF_VAR_eks_cluster_name: ${{ github.event.inputs.eks_cluster_name }}
+      TF_VAR_ssh_key_name: ${{ github.event.inputs.ssh_key_name }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -45,13 +61,4 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        env:
-          TF_VAR_vpc_cidr_block: ${{ github.event.inputs.vpc_cidr_block }}
-          TF_VAR_subnet_azs: ${{ github.event.inputs.subnet_azs }}
-          TF_VAR_vpc_name: ${{ github.event.inputs.vpc_name }}
-          TF_VAR_route_table_name: ${{ github.event.inputs.route_table_name }}
-          TF_VAR_eks_cluster_name: ${{ github.event.inputs.eks_cluster_name }}
-          TF_VAR_ssh_key_name: ${{ github.event.inputs.ssh_key_name }}
-        run: |
-          echo "${{ github.event.inputs.subnet_azs }}" | tr ',' '\n'
-          terraform apply -auto-approve
+        run: terraform apply -auto-approve
